@@ -8,17 +8,10 @@ import java.util.Random;
 import java.util.Scanner;
 
 public class Main {
-    private Socket socket;
-    private BufferedReader reader;
-    private BufferedWriter writer;
+
     private static volatile boolean state = true;
     private static final String UNSUBSCRIBE = "@a0",
-            SUBSCRIBE = "@a1",
-            PARENT_DIRECTORY = "..",
-            DIAG = "diag",
-            CONFIG = "config",
-            NEW_LINE = "\n",
-            DIR = "?";
+            SUBSCRIBE = "@a1";
     private static final int MAX_VOLTAGE_ON_ANALOG_INPUT = 143;
     private static final int MAX_TEMP_ON_TEMP_INPUT = 1000;
     private static final int MAX_CELL_VOLTAGE = 4250;
@@ -99,8 +92,10 @@ public class Main {
 
                         //output stream thread
                         new Thread(() -> {
+                            boolean flag = true;
                             try {
-                                while (true) {
+
+                                while (flag) {
                                     if (flagSendAllParams) {
                                         String temp = getValue();
                                         writer.println(temp);
@@ -112,6 +107,7 @@ public class Main {
                                 try {
                                     e.printStackTrace();
                                     System.out.println("112");
+                                    flag = false;
                                     s.close();
                                     state = false;
                                     Thread.currentThread().interrupt();
