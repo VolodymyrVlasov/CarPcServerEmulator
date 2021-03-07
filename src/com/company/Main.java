@@ -11,7 +11,7 @@ public class Main {
 
     private static volatile boolean state = true;
     private static final String UNSUBSCRIBE = "@a0",
-            SUBSCRIBE = "@a1";
+            SUBSCRIBE = "@a1", TRANSMIT = "transmit 1", NO_TRANSMIT = "transmit 0";
     private static final int MAX_VOLTAGE_ON_ANALOG_INPUT = 143;
     private static final int MAX_TEMP_ON_TEMP_INPUT = 1000;
     private static final int MAX_CELL_VOLTAGE = 4250;
@@ -26,20 +26,15 @@ public class Main {
             rpm = 0;
     private static volatile boolean flag = true,
             flagSendAllParams = true,
-            flagRead = true,
             flagCapacity = true,
             flagSpeed = true,
             flagVoltage = true,
             flagCurrent = true,
-            flagParentDirectory = false,
-            flagDiag = false,
-            flagDiagEntered = false,
-            flagConfig = false,
-            flagConfigEntered = false,
-            flagDIR = false,
-            flagNewLine = false;
+            flagTransmit = false;
+    static int cellNum = 1;
 
     public static void main(String[] args) {
+
         try (ServerSocket ss = new ServerSocket(8080)) {
 
             while (true) {
@@ -73,6 +68,13 @@ public class Main {
                                                 System.out.println(">> " + request + " -> SUBSCRIBE\n");
                                             }
                                             break;
+                                        case TRANSMIT:
+                                            flagSendAllParams = false;
+                                            flagTransmit = true;
+                                            break;
+                                        case NO_TRANSMIT:
+                                            flagTransmit = false;
+
                                     }
                                 } catch (Exception e) {
                                     e.printStackTrace();
@@ -100,7 +102,12 @@ public class Main {
                                         String temp = getValue();
                                         writer.println(temp);
                                         System.out.println(temp);
-                                       Thread.sleep(new Random().nextInt(50)+50);
+                                        Thread.sleep(new Random().nextInt(50) + 50);
+                                    } else if (flagTransmit) {
+                                        String temp = getTrasmit();
+                                        writer.println(temp);
+                                        System.out.println(temp);
+                                        Thread.sleep(20);
                                     }
                                 }
                             } catch (Exception e) {
@@ -134,7 +141,25 @@ public class Main {
         System.out.println("End MAIN");
     }
 
+    private static String getTrasmit() {
+        StringBuilder sb = new StringBuilder();
+        sb.append("cell");
+        sb.append(cellNum);
+        sb.append(": ");
+        sb.append(new Random().nextInt(1750) + 2500);
+        sb.append(",");
+        sb.append(new Random().nextInt(65) - 25);
+        sb.append(",");
+        sb.append(new Random().nextInt(50) - 15);
+        sb.append(",");
+        sb.append("5,8");
+
+        cellNum = cellNum < 35 ? cellNum += 1 : 1;
+        return sb.toString();
+    }
+
     public static String getValue() {
+
         char[] chars = new char[]{'V', 'l', 'n', 'm', 'w', 'z', 'q', 'i', 't', 'v', 'c', 'f', 'R', 'F', 'r', 's', 'E'}; //, 'V', 'l', 'n', 'm', 'w', 'z', 'q', 'i', 't'
         Random random = new Random();
         StringBuilder stringBuilder = new StringBuilder();
