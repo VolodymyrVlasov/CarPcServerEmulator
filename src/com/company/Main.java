@@ -38,12 +38,18 @@ public class Main {
 
     public static void main(String[] args) {
 
+        System.out.println("SERVER START");
+
+//        Logger logger = Logger.getLogger(Main.class.getName());
+//        logger.log(Level.INFO, "");
+//        logger.warning("");
+
         try (ServerSocket ss = new ServerSocket(8080)) {
 
-            while (true) {
-                System.out.println(Thread.currentThread().getName() + ": Wait client");
+            while (state) {
                 Socket s = ss.accept();
-                System.out.println(Thread.currentThread().getName() + ": Client connected");
+                System.out.println(Thread.currentThread().getName() + ": CLIENT " + s.getInetAddress() + " CONNECTED");
+                flag = true;
                 new Thread(() -> {
 
                     try {
@@ -51,23 +57,23 @@ public class Main {
                         PrintWriter writer = new PrintWriter(s.getOutputStream(), true);
                         //input stream thread
                         new Thread(() -> {
-                            while (true) {
+                            while (flag) {
                                 try {
-                                    System.out.println("Wait input");
-//                                    Thread.sleep(1);
+                                    System.out.println(Thread.currentThread().getName() + " -> input: WAIT COMMAND FROM " + s.getInetAddress());
                                     String request = scanner.nextLine();
-                                    System.out.println(request);
+                                    System.out.println(Thread.currentThread().getName() + " -> input: CLIENT " + s.getInetAddress() + " SAY: " + request);
+
                                     switch (request) {
                                         case UNSUBSCRIBE:
                                             if (flagSendAllParams) {
                                                 flagSendAllParams = false;
-                                                System.out.println(">> " + request + " -> UNSUBSCRIBE\n");
+                                                System.out.println(Thread.currentThread().getName() + " -> input: STATUS -> UNSUBSCRIBE\n");
                                             }
                                             break;
                                         case SUBSCRIBE:
                                             if (!flagSendAllParams) {
                                                 flagSendAllParams = true;
-                                                System.out.println(">> " + request + " -> SUBSCRIBE\n");
+                                                System.out.println(Thread.currentThread().getName() + " -> input: STATUS -> SUBSCRIBE\n");
                                             }
                                             break;
                                         case TRANSMIT:
@@ -75,23 +81,26 @@ public class Main {
                                                 flagSendAllParams = false;
                                             }
                                             flagTransmit = true;
-                                            System.out.println(">> " + request + " -> TRANSMIT\n");
+                                            System.out.println(Thread.currentThread().getName() + " -> input: STATUS -> TRANSMIT\n");
                                             break;
                                         case NO_TRANSMIT:
                                             flagTransmit = false;
-                                            System.out.println(">> " + request + " -> DONT TRANSMIT\n");
+                                            System.out.println(Thread.currentThread().getName() + " -> input: STATUS -> DONT TRANSMIT\n");
 
                                     }
                                 } catch (Exception e) {
-                                    e.printStackTrace();
-                                    flag = false;
-                                    state = false;
+
+
                                     try {
+                                        System.out.println(Thread.currentThread().getName() + " -> input: Client " + s.getInetAddress() + " disconnected");
+                                        flag = false;
+                                        state = false;
                                         s.close();
+                                        Thread.currentThread().interrupt();
                                     } catch (IOException ioException) {
                                         ioException.printStackTrace();
                                     }
-                                    Thread.currentThread().interrupt();
+
                                 }
                             }
                         }).start();
@@ -105,42 +114,37 @@ public class Main {
                                     if (flagSendAllParams) {
                                         String temp = getValue();
                                         writer.println(temp);
-                                        System.out.println(temp);
+//                                        System.out.println(temp);
                                         Thread.sleep(50);
                                     } else if (flagTransmit) {
                                         String temp = getTrasmit();
                                         writer.println(temp);
-                                        System.out.println(temp);
+//                                        System.out.println(temp);
                                         Thread.sleep(50);
                                     }
                                 }
                             } catch (Exception e) {
                                 try {
-                                    e.printStackTrace();
-                                    System.out.println("112");
+                                    System.out.println(Thread.currentThread().getName() + " -> output: Client " + s.getInetAddress() + " disconnected");
                                     flag = false;
                                     s.close();
                                     state = false;
                                     Thread.currentThread().interrupt();
                                 } catch (Exception ex) {
                                     ex.printStackTrace();
-                                    System.out.println("118");
                                 }
                             }
                         }).start();
 
                     } catch (IOException e) {
                         e.printStackTrace();
-                        System.out.println("124");
                     }
 
                 }).start();
-                System.out.println("state " + state);
-                if (!state) Thread.currentThread().interrupt();
+                state = true;
             }
         } catch (IOException e) {
             e.printStackTrace();
-            System.out.println("131");
         }
         System.out.println("End MAIN");
     }
