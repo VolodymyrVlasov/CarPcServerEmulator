@@ -6,6 +6,8 @@ import java.net.Socket;
 import java.io.IOException;
 import java.util.Random;
 import java.util.Scanner;
+import java.util.logging.Logger;
+
 
 public class Main {
 
@@ -33,6 +35,7 @@ public class Main {
             flagTransmit = false;
     static int cellNum = 1;
 
+
     public static void main(String[] args) {
 
         try (ServerSocket ss = new ServerSocket(8080)) {
@@ -48,11 +51,10 @@ public class Main {
                         PrintWriter writer = new PrintWriter(s.getOutputStream(), true);
                         //input stream thread
                         new Thread(() -> {
-                            boolean flag = true;
-                            while (flag) {
+                            while (true) {
                                 try {
                                     System.out.println("Wait input");
-                                    Thread.sleep(1);
+//                                    Thread.sleep(1);
                                     String request = scanner.nextLine();
                                     System.out.println(request);
                                     switch (request) {
@@ -69,32 +71,34 @@ public class Main {
                                             }
                                             break;
                                         case TRANSMIT:
-                                            flagSendAllParams = false;
+                                            if (flagSendAllParams) {
+                                                flagSendAllParams = false;
+                                            }
                                             flagTransmit = true;
+                                            System.out.println(">> " + request + " -> TRANSMIT\n");
                                             break;
                                         case NO_TRANSMIT:
                                             flagTransmit = false;
+                                            System.out.println(">> " + request + " -> DONT TRANSMIT\n");
 
                                     }
                                 } catch (Exception e) {
                                     e.printStackTrace();
-                                    System.out.println("86");
                                     flag = false;
                                     state = false;
-                                    Thread.currentThread().interrupt();
                                     try {
                                         s.close();
                                     } catch (IOException ioException) {
                                         ioException.printStackTrace();
-                                        System.out.println("94");
                                     }
+                                    Thread.currentThread().interrupt();
                                 }
                             }
                         }).start();
 
                         //output stream thread
                         new Thread(() -> {
-                            boolean flag = true;
+
                             try {
 
                                 while (flag) {
@@ -102,12 +106,12 @@ public class Main {
                                         String temp = getValue();
                                         writer.println(temp);
                                         System.out.println(temp);
-                                        Thread.sleep(new Random().nextInt(50) + 50);
+                                        Thread.sleep(50);
                                     } else if (flagTransmit) {
                                         String temp = getTrasmit();
                                         writer.println(temp);
                                         System.out.println(temp);
-                                        Thread.sleep(20);
+                                        Thread.sleep(50);
                                     }
                                 }
                             } catch (Exception e) {
