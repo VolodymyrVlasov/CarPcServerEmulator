@@ -162,7 +162,7 @@ public class Main {
         sb.append(",");
         sb.append("5,8");
 
-        cellNum = cellNum < 35 ? cellNum += 1 : 1;
+        cellNum = cellNum < 34 ? cellNum += 1 : 1;
         return sb.toString();
     }
 
