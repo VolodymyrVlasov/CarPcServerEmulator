@@ -23,7 +23,7 @@ public class Main {
             batteryCurrent = 0,
             speed = 0,
             range = 0,
-            passedDistance = 0,
+            passedDistance = 1,
             totalDistance = 1200,
             rpm = 0;
     private static volatile boolean flag = true,
